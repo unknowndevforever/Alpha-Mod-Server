@@ -71,7 +71,15 @@ Settings (environment variables): `SEED` (world seed), `MAX_PLAYERS` (default 20
   everyone who loads or is near that chunk, and spills a broken chest/furnace's items. A furnace only smelts while a
   player has it loaded (the game ticks it client-side).
 
-Not included: mobs, water/lava flow, redstone logic.
+- Water and lava flow like the game's own: a port of its flowing-liquid code (spreads towards the nearest drop,
+  falls, two sources make a new source, lava is slower and shorter, lava + water makes obsidian / cobblestone).
+  Water and lava buckets place a flowing source, an empty bucket picks one up.
+- Mobs: pigs, sheep, cows and chickens spawn on grass; zombies, skeletons, spiders and creepers spawn at night
+  outside and in caves. The server moves them (gravity, swimming, wandering, chasing). The old game protocol has no
+  attack or health packets, so hits are detected from your arm swing (sword/tool damage, knockback), killed mobs drop
+  loot, and **hostile mobs chase you but cannot hurt you** (and creepers do not explode).
+
+Not included: redstone logic, fire, crops growing, leaf decay.
 
 ## Block sync (how placed blocks stay placed)
 
@@ -87,5 +95,6 @@ Players saved inside blocks are lifted out on login and `/tp`.
 - `lib/protocol.js`: packet reading/writing (protocol 2)
 - `lib/blocks.js`: block rules (drops, orientation, doors, stairs) copied from the client's behaviour
 - `lib/world.js`: terrain generator and chunk encoding
+- `lib/liquid.js`: water and lava flow, `lib/mobs.js`: mobs, `lib/nbt.js`: reads chest/furnace items
 - `lib/game.js`: sessions, players, blocks, items, saving, plus the shared-database batching (`run`, `cycle`). Ticks run during polls, so no background timer is needed
 - `app/api/mc/route.js`: the game's HTTP tunnel, `app/api/skin/route.js`: skins, `app/api/status/route.js`: status JSON
