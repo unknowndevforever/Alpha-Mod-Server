@@ -66,7 +66,12 @@ Settings (environment variables): `SEED` (world seed), `MAX_PLAYERS` (default 20
 - Inventory saved per player, chat, `/list /spawn /tp <player> /time day|night /me`
 - Skins: the game uploads `.minecraft/skin.png` when it connects, other players download it from `/api/skin`
 
-Not included: mobs, chests/furnaces that keep items, water/lava flow, redstone logic, sign text.
+- Chests, furnaces and signs keep their contents/text. The game's own screens run on the client and send the block's
+  data (packet 0x3B) whenever it changes; the server stores it with the chunk (shared through the database), sends it to
+  everyone who loads or is near that chunk, and spills a broken chest/furnace's items. A furnace only smelts while a
+  player has it loaded (the game ticks it client-side).
+
+Not included: mobs, water/lava flow, redstone logic.
 
 ## Block sync (how placed blocks stay placed)
 
