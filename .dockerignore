@@ -1,0 +1,5 @@
+node_modules
+.next
+world-data
+package-lock.zip
+*.bat

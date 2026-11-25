@@ -1,0 +1,8 @@
+# Add this to your app.yaml so Wasmer creates a database (the server uses it automatically when DB_HOST is set).
+# Only one region is allowed when a database is used, and the engine must be postgres.
+capabilities:
+  database:
+    engine: postgres
+locality:
+  regions:
+    - fr-roub1
