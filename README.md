@@ -79,7 +79,19 @@ Settings (environment variables): `SEED` (world seed), `MAX_PLAYERS` (default 20
   attack or health packets, so hits are detected from your arm swing (sword/tool damage, knockback), killed mobs drop
   loot, and **hostile mobs chase you but cannot hurt you** (and creepers do not explode).
 
-Not included: redstone logic, fire, crops growing, leaf decay.
+- Redstone, ported from the game's own classes (`lib/features/redstone.js`): dust with power 0-15, torches (inverting,
+  burn-out), levers, buttons, stone/wooden pressure plates, wooden doors, iron doors (power only) and TNT.
+- Fire (`fire.js`): flint and steel, spreading through wood/leaves/wool/TNT, burning out, lava igniting things, water
+  putting it out.
+- TNT (`tnt.js`): lit by flint and steel, fire, redstone or another explosion; 80 tick fuse, the original explosion
+  algorithm, chain reactions, destroys items and hurts mobs in the blast. The client has no primed-TNT entity, so the
+  fuse is shown as the block flashing between TNT and white wool.
+- World growth (`growth.js`): leaf decay, wheat on farmland (wet farmland grows faster), saplings growing into trees,
+  grass spreading and dying, sugar cane and cactus growing. Growth only happens near players, in loaded chunks, and not
+  at night (it uses the sky light).
+
+Not included (no packet for it in this old protocol): damage to players (so no mob attacks / creeper blasts hurting
+you / fall damage), sounds and particles, rain, mushrooms spreading, big trees.
 
 ## Block sync (how placed blocks stay placed)
 
@@ -96,5 +108,6 @@ Players saved inside blocks are lifted out on login and `/tp`.
 - `lib/blocks.js`: block rules (drops, orientation, doors, stairs) copied from the client's behaviour
 - `lib/world.js`: terrain generator and chunk encoding
 - `lib/liquid.js`: water and lava flow, `lib/mobs.js`: mobs, `lib/nbt.js`: reads chest/furnace items
+- `lib/features/*.js`: redstone, fire, tnt, growth (plug-in interface in `lib/features/README.md`)
 - `lib/game.js`: sessions, players, blocks, items, saving, plus the shared-database batching (`run`, `cycle`). Ticks run during polls, so no background timer is needed
 - `app/api/mc/route.js`: the game's HTTP tunnel, `app/api/skin/route.js`: skins, `app/api/status/route.js`: status JSON
