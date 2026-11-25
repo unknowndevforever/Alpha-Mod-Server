@@ -8,7 +8,7 @@ const NAME = /^[A-Za-z0-9_]{1,16}$/;
 export async function GET(req) {
   const name = new URL(req.url).searchParams.get("name") || "";
   if (!NAME.test(name)) return new Response("bad name", { status: 400 });
-  const png = (await getGame()).skin(name);
+  const png = await (await getGame()).skin(name);
   if (!png) return new Response("no skin", { status: 404 });
   return new Response(png, { headers: { "content-type": "image/png", "cache-control": "no-cache" } });
 }
@@ -23,6 +23,6 @@ export async function POST(req) {
   if (png.length < 24 || sig.some((b, i) => png[i] !== b)) return new Response("not a png", { status: 400 });
   const dv = new DataView(png.buffer, png.byteOffset);
   if (dv.getUint32(16) !== 64 || dv.getUint32(20) !== 32) return new Response("skin must be 64x32", { status: 400 });
-  (await getGame()).setSkin(name, png);
+  await (await getGame()).setSkin(name, png);
   return new Response("ok");
 }

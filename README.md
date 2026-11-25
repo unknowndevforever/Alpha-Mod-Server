@@ -46,13 +46,15 @@ npm start          # http://localhost:3000 shows who's online
 2. Go to https://wasmer.io/new, connect the repo and pick the Next.js preset. Wasmer builds and deploys it.
 3. Open `https://yourapp.wasmer.app` to check it's up, then connect from the game with `yourapp.wasmer.app`.
 
-Caveats:
-- The whole game lives in the memory of one server process. If the host starts several copies of the app,
-  players on different copies won't see each other. If it puts the app to sleep, the world in memory is gone.
-  Wasmer's Node.js runtime is still in beta and calls itself "serverless", so expect this to happen there.
-  A host that keeps one `npm start` running (a VPS, Railway, Render, Fly...) doesn't have these problems.
-- The world, players and skins are saved to `world-data/` (or `WORLD_DIR`) every 30 seconds **if the disk is
-  writable**. Without a writable disk the world resets when the app restarts. The status page shows which one you got.
+Multiple copies / sleeping (Wasmer):
+- Wasmer may run several copies of the app and send each request to any of them. With a **database** (see
+  `app.yaml.example`; `DB_HOST` etc. are injected automatically) the server keeps *all* state in Postgres: world,
+  players, sessions, items and time. Every request runs in a short batch under a database lock, so all copies act as
+  one server, and an instance that wakes up or restarts just continues where the others left off.
+  **Use the database on Wasmer, otherwise each copy is its own separate world.**
+- Without a database the whole game lives in one process's memory (fine for `npm start` on a PC/VPS, Railway,
+  Render, Fly...). The world is then saved to `world-data/` (or `WORLD_DIR`) every 15 seconds if the disk is writable.
+  The status page shows which storage you got.
 
 Settings (environment variables): `SEED` (world seed), `MAX_PLAYERS` (default 20), `WORLD_DIR`.
 
@@ -80,7 +82,5 @@ Players saved inside blocks are lifted out on login and `/tp`.
 - `lib/protocol.js`: packet reading/writing (protocol 2)
 - `lib/blocks.js`: block rules (drops, orientation, doors, stairs) copied from the client's behaviour
 - `lib/world.js`: terrain generator and chunk encoding
-- `lib/game.js`: sessions, players, blocks, items, saving. Ticks run during polls, so no background timer is needed
+- `lib/game.js`: sessions, players, blocks, items, saving, plus the shared-database batching (`run`, `cycle`). Ticks run during polls, so no background timer is needed
 - `app/api/mc/route.js`: the game's HTTP tunnel, `app/api/skin/route.js`: skins, `app/api/status/route.js`: status JSON
-
-Companion client: the "Alpha-Modded" repo (the patched client is required to connect).
