@@ -63,7 +63,7 @@ Settings (environment variables): `SEED` (world seed), `MAX_PLAYERS` (default 20
 - Logging in (no minecraft.net account check), terrain streaming (generated hills, beaches, ores, trees)
 - Seeing other players move, swing and hold items
 - Breaking and placing blocks (torches, doors, stairs, furnaces, ladders, signs, redstone...), drops and pickups
-- Inventory saved per player, chat, `/list /spawn /tp <player> /time day|night /me`
+- Inventory saved per player, chat, `/list /spawn /tp <player> /time day|night /weather clear|rain /me`
 - Skins: the game uploads `.minecraft/skin.png` when it connects, other players download it from `/api/skin`
 
 - Chests, furnaces and signs keep their contents/text. The game's own screens run on the client and send the block's
@@ -77,7 +77,7 @@ Settings (environment variables): `SEED` (world seed), `MAX_PLAYERS` (default 20
 - Mobs: pigs, sheep, cows and chickens spawn on grass; zombies, skeletons, spiders and creepers spawn at night
   outside and in caves. The server moves them (gravity, swimming, wandering, chasing). The old game protocol has no
   attack or health packets, so hits are detected from your arm swing (sword/tool damage, knockback), killed mobs drop
-  loot, and **hostile mobs chase you but cannot hurt you** (and creepers do not explode).
+  loot, and hostile mobs now hurt you through the client-extension packet 0x08 (see Combat below).
 
 - Redstone, ported from the game's own classes (`lib/features/redstone.js`): dust with power 0-15, torches (inverting,
   burn-out), levers, buttons, stone/wooden pressure plates, wooden doors, iron doors (power only) and TNT.
@@ -90,8 +90,16 @@ Settings (environment variables): `SEED` (world seed), `MAX_PLAYERS` (default 20
   grass spreading and dying, sugar cane and cactus growing. Growth only happens near players, in loaded chunks, and not
   at night (it uses the sky light).
 
-Not included (no packet for it in this old protocol): damage to players (so no mob attacks / creeper blasts hurting
-you / fall damage), sounds and particles, rain, mushrooms spreading, big trees.
+- Combat (`combat.js`, needs the patched client; the client owns your health, the server only sends HURT 0x08): zombie 5,
+  spider 3 (within 1.5 blocks, 1 hit per second per mob), skeleton arrows 2-4 within 8 blocks with a clear line every 2 s
+  (no flying arrow), creepers hiss for 1.5 s within 3 blocks and explode (power 3, destroys blocks). TNT/creeper explosions
+  hurt players with the original formula (distance falloff, blocked by walls).
+- Sounds: packet 0x3e SOUND, `g.sound(name,x,y,z,vol,pitch)` reaches players within 16 blocks (vol 4: 64). Explosions, TNT
+  hiss, mob idle/hurt/death, hits, doors, levers, buttons, pressure plates. All names are in `lib/sounds.js`.
+- Weather (`weather.js`): packet 0x46 (0 clear, 1 rain), saved in the shared state. Clear lasts 10-25 min, rain 3-9 min,
+  `/weather clear|rain` forces it. Rain puts out fire with open sky above, wets farmland, and lava does not light fires in it.
+
+Not included (no packet for it in this old protocol): particles, mushrooms spreading, big trees, fall damage (the client does it).
 
 ## Block sync (how placed blocks stay placed)
 
@@ -108,6 +116,6 @@ Players saved inside blocks are lifted out on login and `/tp`.
 - `lib/blocks.js`: block rules (drops, orientation, doors, stairs) copied from the client's behaviour
 - `lib/world.js`: terrain generator and chunk encoding
 - `lib/liquid.js`: water and lava flow, `lib/mobs.js`: mobs, `lib/nbt.js`: reads chest/furnace items
-- `lib/features/*.js`: redstone, fire, tnt, growth (plug-in interface in `lib/features/README.md`)
+- `lib/sounds.js`: sound names, `lib/features/*.js`: redstone, fire, tnt, growth, weather, combat (plug-in interface in `lib/features/README.md`)
 - `lib/game.js`: sessions, players, blocks, items, saving, plus the shared-database batching (`run`, `cycle`). Ticks run during polls, so no background timer is needed
 - `app/api/mc/route.js`: the game's HTTP tunnel, `app/api/skin/route.js`: skins, `app/api/status/route.js`: status JSON

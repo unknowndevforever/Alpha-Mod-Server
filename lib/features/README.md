@@ -11,6 +11,7 @@ logic at import time. Game logic runs inside one locked batch at a time, so ther
 - `onUse(g, p, {x, y, z, face, item}, touched)`  a player right-clicked block (x,y,z) holding `item`. Return true if
   you handled it (then nothing else happens). Push every position you changed into `touched` (it is re-sent to the
   player so their predicted screen gets corrected).
+- `onLogin(g, p)`      a player finished logging in (all login packets queued, player is in g.players). Send them your state here.
 - `save(g)` -> JSON-able state, `load(g, state)` (state is undefined for a clean start; reset your state then).
 
 Useful Game API: g.block(x,y,z), g.meta(x,y,z), g.setBlock(x,y,z,id,meta) (broadcasts + notifies features),
@@ -18,3 +19,7 @@ g.pop(x,y,z,drop) (remove block like a player did, with drops/dependents), g.dro
 g.players (Map name->Player with x,y,z), g.mobs (Map, see lib/mobs.js), g.broadcast(packet), g.chunks (Map of loaded
 chunks; use g.chunks.has(`${x>>4},${z>>4}`) to avoid generating chunks), g.surface(x,z), g.time, g.kick.
 Packets: lib/protocol.js (S.*). Only packets the game client registers work: see the server README / mobs.js header.
+
+Sounds: `g.sound(name, x, y, z, vol=1, pitch=1)` sends packet 0x3e to players within 16*vol blocks (vol 4 = 64). All sound names live in
+`lib/sounds.js` (table `SND`, per-mob `MOB_SND`, helper `mobSound(g, mob, 'idle'|'hurt'|'death')`). Player damage: `p.send(S.hurt(n))`
+(the client owns the health). Weather helpers (features/weather.js): `isRaining(g)`, `exposed(g,x,y,z)` (open sky above), `setWeather(g, raining)`.
